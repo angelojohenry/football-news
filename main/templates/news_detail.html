@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<p><a href="{% url 'main:show_main' %}"><button>← Back to News List</button></a></p>
+
+<h1>{{ news.title }}</h1>
+<p><b>{{ news.get_category_display }}</b>{% if news.is_featured %} | 
+    <b>Featured</b>{% endif %}{% if news.is_news_hot %} | 
+    <b>Hot</b>{% endif %} | <i>{{ news.created_at|date:"d M Y, H:i" }}</i> 
+    | Views: {{ news.news_views }}</p>
+
+{% if news.thumbnail %}
+<img src="{{ news.thumbnail }}" alt="News thumbnail" width="300">
+<br /><br />
+{% endif %}
+
+<p>{{ news.content }}</p>
+
+{% endblock content %}
