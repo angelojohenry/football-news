@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block meta %}
-<title>Create News - Football News</title>
+<title>Edit News - Football News</title>
 {% endblock meta %}
 
 {% block content %}
@@ -17,8 +19,8 @@
     <!-- Form -->
     <div class="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 form-style">
       <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Create New News</h1>
-        <p class="text-gray-600">Share your football news and stories with the community</p>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Edit News</h1>
+        <p class="text-gray-600">Update your football news and stories</p>
       </div>
       
       <form method="POST" class="space-y-6">
@@ -45,7 +47,7 @@
             Cancel
           </a>
           <button type="submit" class="order-1 sm:order-2 flex-1 bg-green-600 text-white px-6 py-3 rounded-md font-medium hover:bg-green-700 transition-colors">
-            Publish News
+            Update News
           </button>
         </div>
       </form>

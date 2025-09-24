@@ -1,60 +1,57 @@
- {% extends 'base.html' %}
- {% block content %}
- <h1>Football News</h1>
+{% extends 'base.html' %}
+{% load static %}
 
- <h5>NPM: </h5>
- <p>{{ npm }}</p>
+{% block meta %}
+<title>Football News</title>
+{% endblock meta %}
 
- <h5>Name:</h5>
- <p>{{ name }}</p>
+{% block content %}
+{% include 'navbar.html' %}
+<div class="bg-gray-50 w-full pt-16 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
- <h5>Class:</h5>
- <p>{{ class }}</p>
+    <!-- Header Section -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Latest Football News</h1>
+      <p class="text-gray-600">Stay updated with the latest football stories and analysis</p>
+    </div>
 
- <a href="{% url 'main:create_news' %}">
-   <button>+ Add News</button>
- </a>
+    <!-- Filter Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex space-x-3 mb-4 sm:mb-0">
+        <a href="?" class="{% if request.GET.filter == 'all' or not request.GET.filter  %} bg-green-600 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors hover:bg-green-600 hover:text-white">
+          All News
+        </a>
+        <a href="?filter=my" class="{% if request.GET.filter == 'my' %} bg-green-600 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors hover:bg-green-600 hover:text-white">
+          My News
+        </a>
+      </div>
+      {% if user.is_authenticated %}
+        <div class="text-sm text-gray-500">
+          Last login: {{ last_login }}
+        </div>
+      {% endif %}
+    </div>
 
- <a href="{% url 'main:logout' %}">
-  <button>Logout</button>
- </a>
-
- <h5>Sesi terakhir login: {{ last_login }}</h5>
-
- <hr>
-
- <a href="?filter=all">
-    <button type="button">All Articles</button>
- </a>
- <a href="?filter=my">
-     <button type="button">My Articles</button>
- </a>
-
- {% if not news_list %}
- <p>Belum ada data berita pada football news.</p>
- {% else %}
-
- {% for news in news_list %}
- <div>
-   <h2><a href="{% url 'main:show_news' news.id %}">{{ news.title }}</a></h2>
-
-   <p><b>{{ news.get_category_display }}</b>{% if news.is_featured %} | 
-     <b>Featured</b>{% endif %}{% if news.is_news_hot %} | 
-     <b>Hot</b>{% endif %} | <i>{{ news.created_at|date:"d M Y H:i" }}</i> 
-     | Views: {{ news.news_views }}</p>
-
-   {% if news.thumbnail %}
-   <img src="{{ news.thumbnail }}" alt="thumbnail" width="150" height="100">
-   <br />
-   {% endif %}
-
-   <p>{{ news.content|truncatewords:25 }}...</p>
-
-   <p><a href="{% url 'main:show_news' news.id %}"><button>Read More</button></a></p>
- </div>
-
- <hr>
- {% endfor %}
-
- {% endif %}
- {% endblock content %}
+    <!-- News Grid -->
+    {% if not news_list %}
+      <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <div class="w-32 h-32 mx-auto mb-4">
+          <img src="{% static 'image/no-news.png' %}" alt="No news available" class="w-full h-full object-contain">
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No news found</h3>
+        <p class="text-gray-500 mb-6">Be the first to share football news with the community.</p>
+        <a href="{% url 'main:create_news' %}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+          Create News
+        </a>
+      </div>
+    {% else %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for news in news_list %}
+          {% include 'card_news.html' with news=news %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}

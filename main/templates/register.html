@@ -1,32 +1,118 @@
 {% extends 'base.html' %}
 
 {% block meta %}
-<title>Register</title>
+<title>Register - Football News</title>
 {% endblock meta %}
 
 {% block content %}
+<div class="form-style">
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+    <div class="max-w-md w-full relative z-10">
+      <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-2">Join Us</h2>
+        <p class="text-gray-500">Create your Football News account</p>
+      </div>
 
-<div>
-  <h1>Register</h1>
+      <!-- Form Errors Display -->
+      {% if form.non_field_errors %}
+        <div class="mb-6">
+          {% for error in form.non_field_errors %}
+            <div class="px-4 py-3 rounded text-sm border bg-red-50 border-red-200 text-red-700">
+              {{ error }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
 
-  <form method="POST">
-    {% csrf_token %}
-    <table>
-      {{ form.as_table }}
-      <tr>
-        <td></td>
-        <td><input type="submit" name="submit" value="Daftar" /></td>
-      </tr>
-    </table>
-  </form>
+      {% if form.errors %}
+        <div class="mb-6">
+          {% for field, errors in form.errors.items %}
+            {% if field != '__all__' %}
+              {% for error in errors %}
+                <div class="px-4 py-3 rounded text-sm border bg-red-50 border-red-200 text-red-700 mb-2">
+                  <strong>{{ field|title }}:</strong> {{ error }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
 
-  {% if messages %}
-  <ul>
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+      <form method="POST" action="" class="space-y-5">
+        {% csrf_token %}
+        
+        <div>
+          <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+          <input 
+            id="username" 
+            name="username" 
+            type="text" 
+            required 
+            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-green-500 transition duration-200" 
+            placeholder="Choose a username">
+        </div>
+
+        <div>
+          <label for="password1" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <input 
+            id="password1" 
+            name="password1" 
+            type="password" 
+            required 
+            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-green-500 transition duration-200" 
+            placeholder="Create a password">
+        </div>
+
+        <div>
+          <label for="password2" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+          <input 
+            id="password2" 
+            name="password2" 
+            type="password" 
+            required 
+            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-green-500 transition duration-200" 
+            placeholder="Confirm your password">
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full bg-green-600 text-white font-medium py-3 px-4 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
+          Create Account
+        </button>
+      </form>
+
+      <!-- Messages Display -->
+      {% if messages %}
+        <div class="mt-6">
+          {% for message in messages %}
+            <div 
+              class="
+                px-4 py-3 rounded text-sm border
+                {% if message.tags == 'success' %}
+                  bg-green-50 border-green-200 text-green-700
+                {% elif message.tags == 'error' %}
+                  bg-red-50 border-red-200 text-red-700
+                {% else %}
+                  bg-gray-50 border-gray-200 text-gray-700
+                {% endif %}
+              ">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="mt-6 text-center">
+        <p class="text-gray-500 text-sm">
+          Already have an account? 
+          <a href="{% url 'main:login' %}" class="text-green-600 hover:text-green-700 font-medium">
+            Sign In
+          </a>
+        </p>
+      </div>
+      </div>
+    </div>
+  </div>
 </div>
-
 {% endblock content %}
