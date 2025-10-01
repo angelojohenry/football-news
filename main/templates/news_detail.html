@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block meta %}
-<title>{{ news.title }} - Football News</title>
+<title>News Detail - Football News</title>
 {% endblock meta %}
 
 {% block content %}
@@ -16,53 +16,60 @@
             </a>
         </div>
         
-        <!-- Article -->
-        <article class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <!-- Loading State -->
+        <div id="loading-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <svg class="animate-spin h-8 w-8 text-green-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <p class="text-gray-600 mt-3">Loading news detail...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center hidden">
+            <div class="w-16 h-16 mx-auto mb-4">
+                <div class="text-red-500 text-5xl">⚠️</div>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Failed to load news</h3>
+            <p class="text-gray-500">Please try again later.</p>
+        </div>
+        
+        <!-- Article Content -->
+        <article id="article-content" class="bg-white rounded-lg border border-gray-200 overflow-hidden hidden">
             
             <!-- Header -->
             <div class="p-6 sm:p-8">
-                <div class="flex flex-wrap items-center gap-2 mb-4">
-                    <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-600 text-white">
-                        {{ news.get_category_display }}
-                    </span>
-                    {% if news.is_featured %}
-                        <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Featured
-                        </span>
-                    {% endif %}
-                    {% if news.is_news_hot %}
-                        <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
-                            Hot
-                        </span>
-                    {% endif %}
+                <div id="badges-container" class="flex flex-wrap items-center gap-2 mb-4">
+                    <!-- Dynamic badges will be inserted here -->
                 </div>
                 
-                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
-                    {{ news.title }}
+                <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+                    <!-- Title will be inserted here -->
                 </h1>
                 
                 <div class="flex flex-wrap items-center text-sm text-gray-500 gap-4">
-                    <time datetime="{{ news.created_at|date:'c' }}">
-                        {{ news.created_at|date:"M j, Y g:i A" }}
+                    <time id="article-date">
+                        <!-- Date will be inserted here -->
                     </time>
-                    <span>{{ news.news_views }} views</span>
+                    <span id="article-views">
+                        <!-- Views will be inserted here -->
+                    </span>
                 </div>
             </div>
 
             <!-- Featured Image -->
-            {% if news.thumbnail %}
-                <div class="px-6 sm:px-8">
-                    <img src="{{ news.thumbnail }}" 
-                         alt="{{ news.title }}" 
-                         class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg">
-                </div>
-            {% endif %}
+            <div id="featured-image-container" class="px-6 sm:px-8 hidden">
+                <img id="featured-image" 
+                     src="" 
+                     alt="" 
+                     class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg">
+            </div>
 
             <!-- Content -->
             <div class="p-6 sm:p-8">
                 <div class="prose prose-lg max-w-none">
-                    <div class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
-                        {{ news.content }}
+                    <div id="article-content-text" class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
+                        <!-- Content will be inserted here -->
                     </div>
                 </div>
             </div>
@@ -72,11 +79,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <div class="font-medium text-gray-900">
-                            {% if news.user %}
-                                <p>Author: {{ news.user.username }}</p>
-                            {% else %}
-                                <p>Author: Anonymous</p>
-                            {% endif %}
+                            <p id="article-author">Author: Loading...</p>
                         </div>
                         <p class="text-sm text-gray-500">Author</p>
                     </div>
@@ -85,4 +88,127 @@
         </article>
     </div>
 </div>
+
+<script>
+// Configuration
+const NEWS_ID = "{{ news.id }}";
+const NEWS_DETAIL_ENDPOINT = `{% url 'main:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', NEWS_ID);
+
+// DOM Elements
+const loadingState = document.getElementById('loading-state');
+const errorState = document.getElementById('error-state');
+const articleContent = document.getElementById('article-content');
+const badgesContainer = document.getElementById('badges-container');
+const articleTitle = document.getElementById('article-title');
+const articleDate = document.getElementById('article-date');
+const articleViews = document.getElementById('article-views');
+const featuredImageContainer = document.getElementById('featured-image-container');
+const featuredImage = document.getElementById('featured-image');
+const articleContentText = document.getElementById('article-content-text');
+const articleAuthor = document.getElementById('article-author');
+
+// Show/hide page sections
+function showState(state) {
+    loadingState.classList.toggle('hidden', state !== 'loading');
+    errorState.classList.toggle('hidden', state !== 'error');
+    articleContent.classList.toggle('hidden', state !== 'ready');
+}
+
+// Get readable category name
+function getCategoryLabel(categoryCode) {
+    const categoryMapping = {
+        transfer: 'Transfer',
+        update: 'Update',
+        exclusive: 'Exclusive',
+        match: 'Match',
+        rumor: 'Rumor',
+        analysis: 'Analysis',
+    };
+    return categoryMapping[categoryCode] || categoryCode;
+}
+
+// Render article content
+function renderArticle(news) {
+    // Set title
+    articleTitle.textContent = news.title;
+    document.title = `${news.title} - Football News`;
+    
+    // Set badges
+    badgesContainer.innerHTML = '';
+    
+    // Category badge
+    const categoryBadge = document.createElement('span');
+    categoryBadge.className = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-600 text-white';
+    categoryBadge.textContent = getCategoryLabel(news.category);
+    badgesContainer.appendChild(categoryBadge);
+    
+    // Featured badge
+    if (news.is_featured) {
+        const featuredBadge = document.createElement('span');
+        featuredBadge.className = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800';
+        featuredBadge.textContent = 'Featured';
+        badgesContainer.appendChild(featuredBadge);
+    }
+    
+    // Hot badge
+    if (news.news_views > 20) {
+        const hotBadge = document.createElement('span');
+        hotBadge.className = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800';
+        hotBadge.textContent = 'Hot';
+        badgesContainer.appendChild(hotBadge);
+    }
+    
+    // Set date and views
+    const formattedDate = new Date(news.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    articleDate.textContent = formattedDate;
+    articleViews.textContent = `${news.news_views} views`;
+    
+    // Set featured image
+    if (news.thumbnail) {
+        featuredImage.src = news.thumbnail;
+        featuredImage.alt = news.title;
+        featuredImageContainer.classList.remove('hidden');
+    } else {
+        featuredImageContainer.classList.add('hidden');
+    }
+    
+    // Set content
+    articleContentText.textContent = news.content;
+    
+    // Set author
+    const authorName = news.user_username || 'Anonymous';
+    articleAuthor.textContent = `Author: ${authorName}`;
+}
+
+// Fetch news detail
+async function loadNewsDetail() {
+    try {
+        showState('loading');
+        
+        const response = await fetch(NEWS_DETAIL_ENDPOINT, {
+            headers: { 'Accept': 'application/json' },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch news detail');
+        }
+
+        const newsData = await response.json();
+        renderArticle(newsData);
+        showState('ready');
+    } catch (error) {
+        console.error('Error loading news detail:', error);
+        showState('error');
+    }
+}
+
+// Initialize page
+loadNewsDetail();
+</script>
 {% endblock content %}
